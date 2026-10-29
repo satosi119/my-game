@@ -1,0 +1,86 @@
+import requests
+from flask import Flask, request, jsonify
+from eth_account import Account
+import secrets
+
+app = Flask(__name__)
+
+# [보안] 국가급 해킹 방어를 위한 유저 데이터베이스 (예시용 메모리 딕셔너리)
+user_db = {}
+
+@app.route('/api/v1/engine/sync', methods=['POST'])
+def sync_engine_earnings():
+    data = request.json
+    user_id = data.get('user_id')
+    watch_time_sec = data.get('watch_time') # 유저가 기적 엔진을 켜둔 시간 (초)
+    
+    # 1. 매크로 및 비정상 트래픽 필터링 (보안 장벽)
+    if watch_time_sec > 86400: # 하루는 24시간(86400초)을 넘을 수 없음
+        return jsonify({"status": "error", "message": "비정상적인 접근이 감지되었습니다."}), 400
+        
+    # 2. 광고 수익 정산 (초당 eCPM 가치 계산)
+    # 예시: 1초 방치당 약 0.5원의 광고 가치 환산
+    earned_krw = watch_time_sec * 0.5 
+    
+    if user_id not in user_db:
+        # 유저가 처음 들어왔다면, 복잡한 가입 없이 백엔드에서 Web3 지갑 주소 자동 생성 (Web3Auth 레이어)
+        priv_key = secrets.token_hex(32)
+        acct = Account.from_key(priv_key)
+        user_db[user_id] = {
+            "balance_krw": 0,
+            "wallet_address": acct.address,
+            "private_key": priv_key # 실제 서비스 시엔 암호화하여 Vault에 안전 보관
+        }
+    
+    # 수익 누적
+    user_db[user_id]["balance_krw"] += earned_krw
+    
+    return jsonify({
+        "status": "success",
+        "current_balance": user_db[user_id]["balance_krw"],
+        "assigned_wallet": user_db[user_id]["wallet_address"]
+    })
+
+if __name__ == '__main__':
+    app.run(port=5000)
+
+const { ethers } = require("ethers");
+
+// 블록체인 네트워크 및 RPC 노드 연결 (가스비가 저렴한 폴리곤/아비트럼 체인 권장)
+const PROVIDER_URL = "https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY";
+const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
+
+// 재단 통합 디파이 운용 지갑 (대장님과 미니의 마스터 지갑)
+const FOUNDATION_PRIVATE_KEY = "0x...대장님의_재단_비밀키...";
+const wallet = new ethers.Wallet(FOUNDATION_PRIVATE_KEY, provider);
+
+// Aave V3 풀 컨트랙트 주소 및 ABI (이자를 굴리는 저축은행 역할)
+const AAVE_POOL_ADDRESS = "0x794a61358D6845594F94dc1DB02A252b5b4814aD"; 
+const AAVE_POOL_ABI = [
+  "function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external"
+];
+
+// 스마트 계약 연동 객체 생성
+const aavePoolContract = new ethers.Contract(AAVE_POOL_ADDRESS, AAVE_POOL_ABI, wallet);
+
+/**
+ * [핵심 기능] 모인 광고 수익금을 디파이 풀에 넣어 복리 이자 파밍 시작
+ * @param {string} tokenAddress - 예치할 자산 주소 (예: USDC)
+ * @param {string} amount - 예치할 금액 (위에서 정산된 광고 자금)
+ */
+async function injectLiquidityToDeFi(tokenAddress, amount) {
+  try {
+    console.log(`🏦 [디파이 금고] ${amount} 만큼의 자산을 Aave 복리 풀에 예치합니다...`);
+    
+    // 이더리움 단위 변환 (USDC는 6자리 소수점 사용)
+    .toBigInt(amount, 6);
+    
+    // Aave 프로토콜에 자금 공급 (Supply) 수행 ➔ 이 순간부터 실시간 이자 발생
+    const tx = await aavePoolContract.supply(tokenAddress, parsedAmount, wallet.address, 0);
+    await tx.wait();
+    
+    console.log(`✅ 기적 재단 자본금 예치 완료! 트랜잭션 해시: ${tx.hash}`);
+  } catch (error) {
+    console.error("🚨 디파이 연동 중 보안 장벽 혹은 네트워크 에러 발생:", error);
+  }
+}
