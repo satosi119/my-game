@@ -1,451 +1,268 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>국민의 약속 - 서명 및 동의 운동</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --main-pink: #c2185b;
-            --main-teal: #00897b;
-            --main-yellow: #fbc02d;
-            --card-bg: #1e222d;
-            --modal-dark: #1a1e29;
-            --text-light: #ffffff;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>5x5 대각선 과일 퍼즐</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #0F172A;
+      color: #ffffff;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 12px 10px;
+    }
+    header {
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 20px;
+      color: #4ADE80;
+      margin-bottom: 6px;
+    }
+    .stats-board {
+      display: flex;
+      justify-content: space-around;
+      background: #1E293B;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+    }
+    .stat-item {
+      font-size: 14px;
+    }
+    .stat-value {
+      font-weight: bold;
+      color: #FACC15;
+    }
 
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-light);
-            margin: 0;
-            padding: 20px 15px;
-            display: flex;
-            justify-content: center;
-        }
+    /* 5x5 퍼즐 판 (스마트폰 전체 화면에 긴 세로 비율) */
+    .puzzle-container {
+      width: 100%;
+      max-width: 420px;
+      height: calc(100vh - 160px);
+      max-height: 620px;
+      background: #090D16;
+      border: 3px solid #334155;
+      border-radius: 14px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 4px;
+      padding: 6px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
 
-        .container {
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-top: 20px; /* 상단 여백 */
-        }
+    /* 퍼즐 타일 (세로로 긴 직사각형 & 파란색 칸막이 테두리) */
+    .tile {
+      background: #1E293B;
+      border: 2px solid #2563EB;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.12s ease, background-color 0.15s;
+    }
+    .tile:active {
+      transform: scale(0.95);
+      background-color: #334155;
+    }
+    .tile.empty {
+      background: #0F172A;
+      border: 2px dashed #475569;
+      cursor: default;
+    }
+    .tile-num {
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #94A3B8;
+    }
+    .tile-icon {
+      font-size: 28px;
+      margin-top: 6px;
+    }
 
-        /* 헤더 박스 */
-        .header-box {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px 16px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            border: 1px solid #2e3440;
-        }
-        .header-box h1 {
-            margin: 0 0 8px 0;
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-        }
-        .header-box p {
-            margin: 0;
-            font-size: 13px;
-            color: #aaa;
-            line-height: 1.4;
-        }
-
-        /* 버튼 카드 공통 스타일 */
-        .btn-card {
-            border-radius: 16px;
-            padding: 20px 16px;
-            color: #fff;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.1s ease;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .btn-card:active {
-            transform: scale(0.98);
-        }
-        .btn-card h2 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-card span.sub-text {
-            display: block;
-            margin-top: 6px;
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        .btn-pink { background-color: var(--main-pink); }
-        .btn-teal { background-color: var(--main-teal); }
-        .btn-yellow { background-color: var(--main-yellow); color: #222; }
-
-        /* 하단 카드 */
-        .footer-card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 18px 16px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 14px;
-            color: #fff;
-            border: 1px solid #2e3440;
-        }
-
-        /* 모달 레이어 공통 */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 16px;
-            box-sizing: border-box;
-        }
-        .modal-content {
-            background-color: var(--modal-dark);
-            color: #fff;
-            width: 100%;
-            max-width: 390px;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid #3b4252;
-            box-sizing: border-box;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #2e3440;
-            padding-bottom: 12px;
-        }
-        .modal-header h3 {
-            margin: 0;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .close-btn {
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        /* 폼 요소 및 전파 버튼들 */
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 12px; color: #aaa; margin-bottom: 6px; }
-        .form-group input {
-            width: 100%; padding: 12px; border-radius: 8px;
-            border: 1px solid #3b4252; background-color: #2e3440; color: #fff;
-            box-sizing: border-box; font-size: 14px;
-        }
-        
-        .action-btn {
-            width: 100%; padding: 14px; border-radius: 10px; border: none;
-            font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 10px;
-            text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-        .btn-kakao { background-color: #ffeb00; color: #3c1e1e; }
-        .btn-telegram { background-color: #229ed9; color: #fff; }
-        .btn-sms { background-color: #00c73c; color: #fff; }
-        .btn-copy { background-color: #4c566a; color: #fff; }
-        .btn-close-modal { background-color: #3b4252; color: #fff; margin-top: 5px; }
-
-        /* =================================================== */
-        /* [스크롤 가능한 명단 테이블 영역 및 하단 여백 설정] */
-        /* =================================================== */
-        .table-scroll-container {
-            max-height: 260px; /* 세로 높이를 제한하여 스크롤 생성 */
-            overflow-y: auto;  /* 위아래 드래그(스크롤) 가능 */
-            margin-top: 10px;
-            border: 1px solid #2e3440;
-            border-radius: 8px;
-        }
-        .member-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            font-size: 13px; 
-        }
-        .member-table th {
-            position: sticky;
-            top: 0;
-            background-color: #1a1e29;
-            z-index: 10;
-            padding: 10px 6px;
-            border-bottom: 1px solid #3b4252;
-            color: #88c0d0;
-        }
-        .member-table td { 
-            padding: 12px 6px; 
-            text-align: center; 
-            border-bottom: 1px solid #2e3440; 
-        }
-        .badge-success { color: #a3be8c; font-weight: bold; }
-        .badge-pending { color: #d08770; }
-        .badge-empty { color: #555; }
-    </style>
+    /* 하단 버튼 */
+    .control-panel {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      transition: opacity 0.2s;
+    }
+    .btn-shuffle { background-color: #2563EB; }
+    .btn-reset { background-color: #EF4444; }
+    .btn:active { opacity: 0.8; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- 헤더 섹션 -->
-    <div class="header-box">
-        <h1>국민의 약속</h1>
-        <p>일하는 국회, 특권 폐지를 위한 주권자 서명 운동</p>
+  <header>
+    <h1>🍎 대각선 과일 퍼즐 (5x5)</h1>
+    <div class="stats-board">
+      <div class="stat-item">이동 횟수: <span id="moves" class="stat-value">0</span>회</div>
+      <div class="stat-item">소요 시간: <span id="timer" class="stat-value">00:00</span></div>
     </div>
+  </header>
 
-    <!-- 1. 시민용 서명 & 전파하기 -->
-    <div class="btn-card btn-pink" onclick="openModal('shareModal')">
-        <h2>🚀 시민용 서명 & 전파하기</h2>
-        <span class="sub-text">카카오톡·텔레그램·문자로 웹앱 자동 전파</span>
-    </div>
+  <!-- 퍼즐 판 -->
+  <div class="puzzle-container" id="board"></div>
 
-    <!-- 2. 국회의원 동의 인증하기 (의원용) -->
-    <div class="btn-card btn-teal" onclick="openModal('memberModal')">
-        <h2>🏛️ 국회의원 동의 인증하기</h2>
-        <span class="sub-text">공식 이메일 및 OTP 인증</span>
-    </div>
+  <!-- 조작 버튼 -->
+  <div class="control-panel">
+    <button class="btn btn-shuffle" onclick="shuffleBoard()">🔀 퍼즐 섞기</button>
+    <button class="btn btn-reset" onclick="resetGame()">🔄 다시 시작</button>
+  </div>
 
-    <!-- 3. 동의 의원 & 서명 명단 확인 (시민 공개용) -->
-    <div class="btn-card btn-yellow" onclick="openModal('statusModal')">
-        <h2>📊 동의 의원 & 서명 명단 확인</h2>
-        <span class="sub-text">실시간 동의 현황 및 지역구 검색</span>
-    </div>
+  <script>
+    const FRUITS = ['🍎', '🍌', '🍇', '🍓', '🍊'];
+    let board = [];
+    let moves = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
 
-    <!-- 하단 메시지 -->
-    <div class="footer-card">
-        특권은 내려놓고, 주권자의 명령에 동합니다!
-    </div>
-</div>
-
-<!-- [모달 1] 시민용 - 전국 동시 전파하기 모달 -->
-<div id="shareModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>🚀 국민의 약속 - 전국 동시 전파하기</h3>
-            <button class="close-btn" onclick="closeModal('shareModal')">&times;</button>
-        </div>
-        <p style="font-size:12px; color:#ccc; margin-bottom:15px; line-height:1.4;">
-            버튼 하나만 클릭하면 국민의 약속 영구 웹앱 주소와 메시지가 원터치로 자동 발송됩니다!
-        </p>
-        
-        <button class="action-btn btn-kakao" onclick="shareKakao()">💬 카카오톡 / 메신저로 즉시 전파하기</button>
-        <button class="action-btn btn-telegram" onclick="shareTelegram()">✈️ 텔레그램 방에 전파하기</button>
-        <button class="action-btn btn-sms" onclick="shareSMS()">📱 등록된 스마트폰 문자로 자동 발송하기</button>
-        <button class="action-btn btn-copy" onclick="copyLink()">📋 웹앱 사이트 주소(링크) 복사하기</button>
-        <button class="action-btn btn-close-modal" onclick="closeModal('shareModal')">닫기</button>
-    </div>
-</div>
-
-<!-- [모달 2] 의원용 - 국회의원 동의 인증 신청 모달 -->
-<div id="memberModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>🏛️ 국회의원 공식 동의 신청</h3>
-            <button class="close-btn" onclick="closeModal('memberModal')">&times;</button>
-        </div>
-
-        <div id="memberStep1">
-            <div class="form-group">
-                <label>의원 성명</label>
-                <input type="text" id="memberName" placeholder="예: 홍길동">
-            </div>
-            <div class="form-group">
-                <label>공식 이메일 주소</label>
-                <input type="email" id="memberEmail" placeholder="member@assembly.go.kr">
-            </div>
-            <div class="form-group">
-                <label>소속 지역구</label>
-                <input type="text" id="memberRegion" placeholder="예: 서울 영등포구갑">
-            </div>
-            <button class="action-btn" style="background-color:#5e81ac; color:#fff;" onclick="submitMemberConsent()">인증 메일/OTP 발송하기</button>
-        </div>
-
-        <div id="memberStep2" style="display:none; margin-top:10px;">
-            <p style="font-size:13px; color:#a3be8c;">입력하신 이메일로 OTP 인증번호가 발송되었습니다.</p>
-            <div class="form-group">
-                <label>수신받은 OTP 6자리 입력</label>
-                <input type="text" id="memberOtpInput" placeholder="예: 482910">
-            </div>
-            <button class="action-btn" style="background:#a3be8c; color:#1a1e29;" onclick="verifyMemberOTP()">OTP 검증 및 동의 완료</button>
-        </div>
-    </div>
-</div>
-
-<!-- [모달 3] 시민용 - 동의 현황 및 명단 확인 모달 (스크롤 + 하단 공백 3개 포함) -->
-<div id="statusModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>🏛️ 국회의원 동의 현황 및 명단</h3>
-            <button class="close-btn" onclick="closeModal('statusModal')">&times;</button>
-        </div>
-        <div class="form-group" style="margin-bottom: 8px;">
-            <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="🔍 지역구 또는 의원명을 입력하세요">
-        </div>
-        
-        <!-- 스크롤 가능한 테이블 컨테이너 -->
-        <div class="table-scroll-container">
-            <table class="member-table">
-                <thead>
-                    <tr>
-                        <th>의원명</th>
-                        <th>지역구</th>
-                        <th>동의 상태</th>
-                    </tr>
-                </thead>
-                <tbody id="memberTableBody">
-                    <!-- JavaScript에서 데이터 및 하단 공백 행이 동적으로 채워짐 -->
-                </tbody>
-            </table>
-        </div>
-
-        <button class="action-btn btn-close-modal" style="margin-top:15px;" onclick="closeModal('statusModal')">닫기</button>
-    </div>
-</div>
-
-<script>
-    const API_BASE_URL = "https://your-serverless-api.workers.dev";
-    const shareMessage = "[국민의 약속] 일하는 국회, 특권 폐지를 위한 주권자 서명 운동에 동참해 주세요!\nhttps://satosi119.github.io";
-
-    let memberDataList = [
-        { name: "홍길동 의원", region: "서울 영등포구갑", status: "인증 완료" },
-        { name: "김철수 의원", region: "경기 성남시분당구", status: "인증 완료" },
-        { name: "이영희 의원", region: "부산 해운대구갑", status: "미동의 (대기 중)" }
-    ];
-
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = "flex";
-        if (modalId === 'statusModal') {
-            loadMemberStatus();
-        }
+    function initGame() {
+      // 1~24번 퍼즐 조각 (25번째는 빈칸 0)
+      board = Array.from({length: 24}, (_, i) => i + 1);
+      board.push(0);
+      moves = 0;
+      document.getElementById('moves').textContent = moves;
+      resetTimer();
+      renderBoard();
     }
 
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
-    }
+    function renderBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
 
-    // 시민용 전파 기능
-    function shareKakao() {
-        if (navigator.share) {
-            navigator.share({
-                title: '국민의 약속',
-                text: shareMessage,
-                url: window.location.href,
-            }).catch(() => {});
+      board.forEach((val, idx) => {
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        
+        if (val === 0) {
+          tile.classList.add('empty');
         } else {
-            window.open(`https://sharer.kakao.com/picker/link?url=${encodeURIComponent(window.location.href)}`, '_blank');
+          const fruit = FRUITS[(val - 1) % 5];
+          tile.innerHTML = `
+            <span class="tile-num">${val}</span>
+            <span class="tile-icon">${fruit}</span>
+          `;
+          tile.onclick = () => moveTile(idx);
         }
+        boardEl.appendChild(tile);
+      });
     }
 
-    function shareTelegram() {
-        const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareMessage)}`;
-        window.open(tgUrl, '_blank');
+    // 이동 가능 로직 (상하좌우 + 대각선 8방향)
+    function moveTile(idx) {
+      const emptyIdx = board.indexOf(0);
+      const row = Math.floor(idx / 5);
+      const col = idx % 5;
+      const emptyRow = Math.floor(emptyIdx / 5);
+      const emptyCol = emptyIdx % 5;
+
+      const rowDiff = Math.abs(row - emptyRow);
+      const colDiff = Math.abs(col - emptyCol);
+
+      // 상하좌우(1칸 차이) 또는 대각선(가로1칸 + 세로1칸 차이) 모두 이동 허용
+      const isMovable = (rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0);
+
+      if (isMovable) {
+        if (moves === 0 && !timerInterval) startTimer();
+        [board[idx], board[emptyIdx]] = [board[emptyIdx], board[idx]];
+        moves++;
+        document.getElementById('moves').textContent = moves;
+        renderBoard();
+        checkWin();
+      }
     }
 
-    function shareSMS() {
-        const smsUrl = `sms:?body=${encodeURIComponent(shareMessage)}`;
-        window.location.href = smsUrl;
-    }
+    function shuffleBoard() {
+      for (let i = 0; i < 250; i++) {
+        const emptyIdx = board.indexOf(0);
+        const validMoves = [];
+        const emptyRow = Math.floor(emptyIdx / 5);
+        const emptyCol = emptyIdx % 5;
 
-    function copyLink() {
-        navigator.clipboard.writeText("https://satosi119.github.io").then(() => {
-            alert("📋 웹앱 사이트 주소가 클립보드에 복사되었습니다!");
-        }).catch(() => {
-            alert("주소 복사에 실패했습니다.");
-        });
-    }
-
-    // 의원용 OTP 관련 함수
-    async function submitMemberConsent() {
-        const name = document.getElementById('memberName').value.trim();
-        const email = document.getElementById('memberEmail').value.trim();
-        const region = document.getElementById('memberRegion').value.trim();
-
-        if(!name || !email) {
-            alert("의원 성명과 이메일을 정확히 입력해 주세요.");
-            return;
+        for (let r = 0; r < 5; r++) {
+          for (let c = 0; c < 5; c++) {
+            const rowDiff = Math.abs(r - emptyRow);
+            const colDiff = Math.abs(c - emptyCol);
+            if ((rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0)) {
+              validMoves.push(r * 5 + c);
+            }
+          }
         }
 
-        alert(`[안내] ${name} 의원님(${email})께 인증 메일 및 OTP가 발송되었습니다.`);
-        memberDataList.push({ name: `${name} 의원`, region: region || "지역구 미지정", status: "미동의 (대기 중)" });
-        document.getElementById('memberStep1').style.display = 'none';
-        document.getElementById('memberStep2').style.display = 'block';
+        const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+        [board[emptyIdx], board[randomMove]] = [board[randomMove], board[emptyIdx]];
+      }
+      moves = 0;
+      document.getElementById('moves').textContent = moves;
+      resetTimer();
+      renderBoard();
     }
 
-    async function verifyMemberOTP() {
-        const code = document.getElementById('memberOtpInput').value.trim();
-        if(!code) {
-            alert("OTP 번호를 입력해 주세요.");
-            return;
-        }
-        alert("🎉 OTP 인증이 성공적으로 완료되었습니다!");
-        closeModal('memberModal');
-        openModal('statusModal');
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `${mins}:${secs}`;
+      }, 1000);
     }
 
-    async function loadMemberStatus() {
-        renderMemberList();
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerSeconds = 0;
+      document.getElementById('timer').textContent = '00:00';
     }
 
-    // 명단 렌더링 (하단 공백 3행 추가 및 스크롤 지원)
-    function renderMemberList() {
-        const tbody = document.getElementById('memberTableBody');
-        tbody.innerHTML = '';
-
-        // 실제 등록된 의원 명단 출력
-        memberDataList.forEach(member => {
-            const tr = document.createElement('tr');
-            const isSuccess = member.status.includes("완료");
-            const statusClass = isSuccess ? "badge-success" : "badge-pending";
-            const icon = isSuccess ? "✔" : "";
-
-            tr.innerHTML = `
-                <td>${member.name}</td>
-                <td>${member.region}</td>
-                <td class="${statusClass}">[ ${member.status} ${icon} ]</td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        // 💡 하단에 여유 공간(공백란) 3개 강제 추가
-        for (let i = 0; i < 3; i++) {
-            const emptyTr = document.createElement('tr');
-            emptyTr.innerHTML = `
-                <td class="badge-empty">-</td>
-                <td class="badge-empty">작성 대기 중</td>
-                <td class="badge-empty">미동의 (대기 중)</td>
-            `;
-            tbody.appendChild(emptyTr);
-        }
+    function resetGame() {
+      initGame();
     }
 
-    function filterMembers() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#memberTableBody tr');
-
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
-        });
+    function checkWin() {
+      const isWin = board.slice(0, 24).every((val, i) => val === i + 1);
+      if (isWin) {
+        clearInterval(timerInterval);
+        setTimeout(() => alert(`🎉 축하합니다! 퍼즐을 완벽하게 맞추셨습니다!\n총 이동 횟수: ${moves}회`), 100);
+      }
     }
-</script>
 
+    initGame();
+  </script>
 </body>
 </html>
