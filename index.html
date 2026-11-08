@@ -7,69 +7,77 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     body {
-      background-color: #26170B; color: #ffffff;
+      background-color: #0F172A; color: #ffffff;
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 10px; overflow: hidden;
-      background-image: radial-gradient(circle, #3D2314 0%, #1A0F07 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      min-height: 100vh; padding: 12px; overflow-x: hidden;
+      background-image: radial-gradient(circle, #2C1A0E 0%, #0F0905 100%);
     }
-    header { text-align: center; margin-bottom: 12px; }
+    header { text-align: center; margin-bottom: 8px; width: 100%; max-width: 400px; }
     .iq-board {
-      background: #DEB887; color: #3A2208; padding: 6px 20px; border-radius: 8px;
-      font-size: 20px; font-weight: 900; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
-      border: 3px solid #8B5A2B; margin-bottom: 15px; letter-spacing: 1px;
+      background: #DEB887; color: #3A2208; padding: 6px 16px; border-radius: 8px;
+      font-size: 18px; font-weight: 900; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+      border: 3px solid #8B5A2B; display: inline-block; letter-spacing: 1px;
     }
     
-    /* 게임 플레이 영역 (우드 감성) */
+    /* 퍼즐 판 컨테이너 */
     .game-container {
-      position: relative; width: 360px; height: 360px;
-      background: #8B5A2B; border: 6px solid #5C3A21; border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 5px 15px rgba(0,0,0,0.4);
+      position: relative; width: 340px; height: 340px;
+      background: #8B5A2B; border: 5px solid #5C3A21; border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 4px 10px rgba(0,0,0,0.4);
       display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
-      gap: 2px; padding: 4px;
+      gap: 2px; padding: 4px; margin-bottom: 15px;
     }
 
-    /* 슬롯 칸 */
     .slot {
       background: #4E311B; border-radius: 4px;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
     }
     .slot.target {
-      background: #2C1A0E;
-      border: 1px dashed rgba(255,255,255,0.15);
+      background: #231308;
+      border: 1px dashed rgba(255,255,255,0.12);
+    }
+
+    /* 하단 블록 대기소 영역 */
+    .dock-area {
+      width: 100%; max-width: 340px; height: 130px;
+      background: rgba(0,0,0,0.3); border: 2px solid #5C3A21; border-radius: 10px;
+      display: flex; justify-content: space-around; align-items: center;
+      position: relative; padding: 5px; margin-bottom: 10px;
     }
 
     /* 나무 블록 스타일 */
     .wood-block {
       position: absolute; display: grid; gap: 2px; cursor: grab;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+      touch-action: none;
       transition: transform 0.1s ease;
     }
-    .wood-block:active { cursor: grabbing; transform: scale(1.05); }
+    .wood-block:active { cursor: grabbing; transform: scale(1.03); }
     
     .wood-cell {
       background: linear-gradient(135deg, #DEB887 0%, #C49A6C 50%, #A07144 100%);
-      border-radius: 4px; border: 1px solid #8B5A2B;
+      border-radius: 4px; border: 1px solid #6F4522;
       box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -2px 3px rgba(0,0,0,0.3);
     }
 
-    /* 하단 제어판 */
-    .control-panel { margin-top: 20px; display: flex; gap: 10px; }
+    /* 제어 버튼 */
+    .control-panel { width: 100%; max-width: 340px; display: flex; gap: 8px; }
     .btn {
-      padding: 10px 20px; font-size: 14px; font-weight: bold;
+      flex: 1; padding: 10px; font-size: 14px; font-weight: bold;
       background: #D97706; color: white; border: none; border-radius: 8px;
       cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      transition: background 0.2s, transform 0.1s;
+      transition: background 0.2s;
     }
-    .btn:active { transform: translateY(2px); background: #B45309; }
+    .btn:active { background: #B45309; }
 
-    /* 클리어 메시지 팝업 */
+    /* 클리어 팝업 */
     #clearMsg {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-      background: rgba(0,0,0,0.85); padding: 25px 40px; border-radius: 16px;
-      border: 3px solid #FACC15; text-align: center; font-size: 22px; font-weight: bold;
+      background: rgba(15, 23, 42, 0.95); padding: 20px 30px; border-radius: 16px;
+      border: 3px solid #FACC15; text-align: center; font-size: 20px; font-weight: bold;
       color: #FACC15; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 100; pointer-events: none;
+      z-index: 1000; pointer-events: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     #clearMsg.show { transform: translate(-50%, -50%) scale(1); }
   </style>
@@ -80,17 +88,20 @@
     <div class="iq-board" id="iqDisplay">IQ = 49</div>
   </header>
 
-  <!-- 퍼즐 보드 (6x6 격자 기준 구멍 홈 배치) -->
+  <!-- 메인 보드판 (6x6) -->
   <div class="game-container" id="gameContainer"></div>
 
+  <!-- 블록 대기소 -->
+  <div class="dock-area" id="dockArea"></div>
+
   <div class="control-panel">
-    <button class="btn" onclick="resetPuzzle()">🔄 다시 하기</button>
+    <button class="btn" onclick="resetPuzzle()">🔄 다시 시작</button>
   </div>
 
   <div id="clearMsg">🎉 퍼즐 완성! IQ 테스트 통과! 🎉</div>
 
   <script>
-    // 십자 형태의 구멍 좌표 정의 (총 14칸 홈)
+    // 십자 모양 타겟 홈 좌표 (6x6 기준)
     const targetCells = [
       {r: 1, c: 2}, {r: 1, c: 3},
       {r: 2, c: 1}, {r: 2, c: 2}, {r: 2, c: 3}, {r: 2, c: 4},
@@ -99,142 +110,186 @@
       {r: 5, c: 2}, {r: 5, c: 3}
     ];
 
-    // 블록 정의 (상대 좌표 형태, 초기 배치 위치 px 포함)
+    // 블록 구조 데이터
     let blocksData = [
-      { id: 'b1', shape: [[0,0], [1,0], [2,0], [2,1]], startX: 20, startY: 410 },
-      { id: 'b2', shape: [[0,0], [0,1], [1,1], [2,1]], startX: 135, startY: 410 },
-      { id: 'b3', shape: [[0,1], [1,0], [1,1]], startX: 250, startY: 410 },
+      { id: 'b1', shape: [[0,0], [1,0], [2,0], [2,1]], dockIndex: 0 },
+      { id: 'b2', shape: [[0,0], [0,1], [1,1], [2,1]], dockIndex: 1 },
+      { id: 'b3', shape: [[0,1], [1,0], [1,1]], dockIndex: 2 },
     ];
 
     const container = document.getElementById('gameContainer');
-    const cellSize = 56; // 6x6 그리드 한 칸의 크기 (px)
-    const boardOffset = 6; // 컨테이너 패딩
+    const dockArea = document.getElementById('dockArea');
+    const cellSize = 52; // 그리드 셀 크기 px
 
     function initGame() {
       container.innerHTML = '';
+      dockArea.innerHTML = '';
       
-      // 6x6 슬롯 및 타겟 홈 생성
+      // 6x6 그리드 슬롯 생성
       for (let r = 0; r < 6; r++) {
         for (let c = 0; c < 6; c++) {
           const slot = document.createElement('div');
           slot.classList.add('slot');
-          const isTarget = targetCells.some(t => t.r === r && t.c === c);
-          if (isTarget) slot.classList.add('target');
+          if (targetCells.some(t => t.r === r && t.c === c)) {
+            slot.classList.add('target');
+          }
           container.appendChild(slot);
         }
       }
 
-      // 블록 DOM 생성 및 드래그 이벤트 연결
+      // 블록 생성 및 배치
       blocksData.forEach(b => {
-        const el = document.createElement('div');
-        el.className = 'wood-block';
-        el.id = b.id;
-        
-        // 블록 형태 크기 계산
-        const maxR = Math.max(...b.shape.map(p => p[0]));
-        const maxC = Math.max(...b.shape.map(p => p[1]));
-        el.style.gridTemplateRows = `repeat(${maxR + 1}, ${cellSize}px)`;
-        el.style.gridTemplateColumns = `repeat(${maxC + 1}, ${cellSize}px)`;
-        el.style.width = `${(maxC + 1) * cellSize}px`;
-        el.style.height = `${(maxR + 1) * cellSize}px`;
-
-        b.shape.forEach(([r, c]) => {
-          const cell = document.createElement('div');
-          cell.className = 'wood-cell';
-          cell.style.gridRow = r + 1;
-          cell.style.gridColumn = c + 1;
-          el.appendChild(cell);
-        });
-
-        // 초기 위치 설정
-        el.style.left = `${b.startX}px`;
-        el.style.top = `${b.startY}px`;
-
-        makeDraggable(el, b);
-        document.body.appendChild(el);
+        b.currentGrid = null; // 초기에는 대기소에 위치
+        createBlockElement(b);
       });
 
       document.getElementById('clearMsg').classList.remove('show');
+      document.getElementById('iqDisplay').textContent = "IQ = 49";
     }
 
-    // 드래그 앤 드롭 구현 (마우스 및 터치 지원)
-    function makeDraggable(element, blockInfo) {
-      let shiftX, shiftY;
+    function createBlockElement(b) {
+      const el = document.createElement('div');
+      el.className = 'wood-block';
+      intentElementId(el, b.id);
 
-      function moveAt(pageX, pageY) {
-        element.style.left = `${pageX - shiftX}px`;
-        element.style.top = `${pageY - shiftY}px`;
-      }
+      const maxR = Math.max(...b.shape.map(p => p[0]));
+      const maxC = Math.max(...b.shape.map(p => p[1]));
+      el.style.gridTemplateRows = `repeat(${maxR + 1}, ${cellSize}px)`;
+      el.style.gridTemplateColumns = `repeat(${maxC + 1}, ${cellSize}px)`;
+      el.style.width = `${(maxC + 1) * cellSize}px`;
+      el.style.height = `${(maxR + 1) * cellSize}px`;
 
-      function onMouseMove(event) {
-        moveAt(event.pageX, event.pageY);
-      }
-
-      function onTouchMove(event) {
-        moveAt(event.touches[0].pageX, event.touches[0].pageY);
-      }
-
-      function onDragEnd(event) {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onDragEnd);
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onDragEnd);
-
-        snapToGrid(element, blockInfo);
-        checkWinCondition();
-      }
-
-      element.addEventListener('mousedown', (e) => {
-        shiftX = e.clientX - element.getBoundingClientRect().left;
-        shiftY = e.clientY - element.getBoundingClientRect().top;
-        element.style.zIndex = 1000;
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onDragEnd);
-        e.preventDefault();
+      b.shape.forEach(([r, c]) => {
+        const cell = document.createElement('div');
+        cell.className = 'wood-cell';
+        cell.style.gridRow = r + 1;
+        cell.style.gridColumn = c + 1;
+        el.appendChild(cell);
       });
 
-      element.addEventListener('touchstart', (e) => {
-        shiftX = e.touches[0].clientX - element.getBoundingClientRect().left;
-        shiftY = e.touches[0].clientY - element.getBoundingClientRect().top;
-        element.style.zIndex = 1000;
-        document.addEventListener('touchmove', onTouchMove, { passive: false });
-        document.addEventListener('touchend', onDragEnd);
-        e.preventDefault();
-      });
+      moveToDock(el, b);
+      makeDraggable(el, b);
+      document.body.appendChild(el);
     }
 
-    // 보드판 그리드 위치에 스냅(자석처럼 딱 맞추기)
-    function snapToGrid(element, blockInfo) {
-      const containerRect = container.getBoundingClientRect();
-      const elemRect = element.getBoundingClientRect();
+    function intentElementId(el, id) {
+      el.id = id;
+    }
 
-      // 보드 내부 상대 좌표 계산
-      const relX = elemRect.left - containerRect.left;
-      const relY = elemRect.top - containerRect.top;
+    // 블록을 대기소 위치로 정렬
+    function moveToDock(element, blockInfo) {
+      const dockRect = dockArea.getBoundingClientRect();
+      const blockWidth = element.offsetWidth;
+      const blockHeight = element.offsetHeight;
+      
+      // 대기소 내에서 간격 맞춰 배치
+      const slotWidth = dockRect.width / 3;
+      const targetX = dockRect.left + (slotWidth * blockInfo.dockIndex) + (slotWidth - blockWidth) / 2;
+      const targetY = dockRect.top + (dockRect.height - blockHeight) / 2;
 
-      const targetCol = Math.round(relX / cellSize);
-      const targetRow = Math.round(relY / cellSize);
-
-      // 보드 범위 안에 들어오면 스냅, 아니면 원래 대기 위치로 복귀
-      if (targetCol >= 0 && targetRow >= 0 && targetCol <= 6 && targetRow <= 6) {
-        element.style.left = `${containerRect.left + targetCol * cellSize - boardOffset}px`;
-        element.style.top = `${containerRect.top + targetRow * cellSize - boardOffset}px`;
-        blockInfo.currentGrid = { r: targetRow, c: targetCol };
-      } else {
-        element.style.left = `${blockInfo.startX}px`;
-        element.style.top = `${blockInfo.startY}px`;
-        blockInfo.currentGrid = null;
-      }
+      element.style.left = `${targetX}px`;
+      element.style.top = `${targetY}px`;
       element.style.zIndex = 10;
     }
 
-    // 승리 조건 체크 (구멍 칸을 블록들이 정확히 채웠는지 확인)
+    // 정밀 드래그 앤 드롭 로직 (터치 어긋남 현상 완벽 해결)
+    function makeDraggable(element, blockInfo) {
+      let startX, startY, initialLeft, initialTop;
+
+      function pointerDown(e) {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        startX = clientX;
+        startY = clientY;
+
+        const rect = element.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        element.style.zIndex = 1000;
+
+        if (e.touches) {
+          window.addEventListener('touchmove', pointerMove, { passive: false });
+          window.addEventListener('touchend', pointerUp);
+        } else {
+          window.addEventListener('mousemove', pointerMove);
+          window.addEventListener('mouseup', pointerUp);
+        }
+        e.preventDefault();
+      }
+
+      function pointerMove(e) {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        element.style.left = `${initialLeft + dx}px`;
+        element.style.top = `${initialTop + dy}px`;
+      }
+
+      function pointerUp(e) {
+        if (e.touches) {
+          window.removeEventListener('touchmove', pointerMove);
+          window.removeEventListener('touchend', pointerUp);
+        } else {
+          window.removeEventListener('mousemove', pointerMove);
+          window.removeEventListener('mouseup', pointerUp);
+        }
+
+        handleSnapOrDock(element, blockInfo);
+        checkWinCondition();
+      }
+
+      element.addEventListener('mousedown', pointerDown);
+      element.addEventListener('touchstart', pointerDown, { passive: false });
+    }
+
+    // 보드 판 위에 정확히 안착하는지 판별
+    function handleSnapOrDock(element, blockInfo) {
+      const containerRect = container.getBoundingClientRect();
+      const elemRect = element.getBoundingClientRect();
+
+      // 보드판 영역 내부에 들어왔는지 확인
+      const isInsideBoard = 
+        elemRect.left >= containerRect.left - 30 &&
+        elemRect.top >= containerRect.top - 30 &&
+        elemRect.right <= containerRect.right + 30 &&
+        elemRect.bottom <= containerRect.bottom + 30;
+
+      if (isInsideBoard) {
+        // 가장 가까운 그리드 셀 인덱스 계산
+        const relX = elemRect.left - containerRect.left;
+        const relY = elemRect.top - containerRect.top;
+        const targetCol = Math.round(relX / cellSize);
+        const targetRow = Math.round(relY / cellSize);
+
+        // 그리드 범위 안에 완전히 매칭되면 스냅
+        if (targetCol >= 0 && targetRow >= 0) {
+          element.style.left = `${containerRect.left + targetCol * cellSize + 4}px`;
+          element.style.top = `${containerRect.top + targetRow * cellSize + 4}px`;
+          blockInfo.currentGrid = { r: targetRow, c: targetCol };
+          element.style.zIndex = 20;
+          return;
+        }
+      }
+
+      // 보드 밖이거나 범위가 벗어났다면 대기소로 복귀
+      blockInfo.currentGrid = null;
+      moveToDock(element, blockInfo);
+    }
+
+    // 승리 조건 확인
     function checkWinCondition() {
       let filledSlots = new Set();
       let overlap = false;
+      let placedCount = 0;
 
       blocksData.forEach(b => {
         if (!b.currentGrid) return;
+        placedCount++;
         b.shape.forEach(([r, c]) => {
           const boardR = b.currentGrid.r + r;
           const boardC = b.currentGrid.c + c;
@@ -244,9 +299,8 @@
         });
       });
 
-      if (overlap) return;
+      if (overlap || placedCount === 0) return;
 
-      // 모든 타겟 칸이 정확히 채워졌는지 검증
       const allTargetFilled = targetCells.every(t => filledSlots.has(`${t.r},${t.c}`)) && filledSlots.size === targetCells.length;
 
       if (allTargetFilled) {
@@ -256,13 +310,11 @@
     }
 
     function resetPuzzle() {
-      // 기존 동적 생성된 블록 엘리먼트 제거 후 재생성
       document.querySelectorAll('.wood-block').forEach(el => el.remove());
-      blocksData.forEach(b => delete b.currentGrid);
       initGame();
     }
 
-    initGame();
+    window.onload = initGame;
   </script>
 </body>
 </html>
