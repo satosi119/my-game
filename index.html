@@ -3,318 +3,321 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>우드 블록 IQ 퍼즐</title>
+  <title>5x5 대각선 과일 매치 (8방향)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
     body {
       background-color: #0F172A; color: #ffffff;
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-      min-height: 100vh; padding: 12px; overflow-x: hidden;
-      background-image: radial-gradient(circle, #2C1A0E 0%, #0F0905 100%);
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; padding: 6px;
     }
-    header { text-align: center; margin-bottom: 8px; width: 100%; max-width: 400px; }
-    .iq-board {
-      background: #DEB887; color: #3A2208; padding: 6px 16px; border-radius: 8px;
-      font-size: 18px; font-weight: 900; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
-      border: 3px solid #8B5A2B; display: inline-block; letter-spacing: 1px;
+    header { text-align: center; width: 100%; max-width: 420px; margin-bottom: 4px; }
+    h1 { font-size: 18px; color: #4ADE80; margin-bottom: 2px; }
+    .stats-board {
+      display: flex; justify-content: space-around; background: #1E293B;
+      padding: 4px 10px; border-radius: 8px; border: 1px solid #334155;
     }
-    
-    /* 퍼즐 판 컨테이너 */
-    .game-container {
-      position: relative; width: 340px; height: 340px;
-      background: #8B5A2B; border: 5px solid #5C3A21; border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 4px 10px rgba(0,0,0,0.4);
-      display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
-      gap: 2px; padding: 4px; margin-bottom: 15px;
+    .stat-item { font-size: 13px; }
+    .stat-value { font-weight: bold; color: #FACC15; }
+
+    /* 퍼즐 판 (위로 바짝 올려 한눈에 보이게 조정) */
+    .puzzle-container {
+      width: 100%; max-width: 400px; height: calc(100vh - 120px); max-height: 460px;
+      background: #090D16; border: 3px solid #334155; border-radius: 12px;
+      display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+      gap: 4px; padding: 4px; position: relative;
     }
 
-    .slot {
-      background: #4E311B; border-radius: 4px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+    /* 타일 */
+    .tile {
+      background: #1E293B; border: 2px solid #2563EB; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 28px; position: relative;
+      transition: background-color 0.1s, transform 0.1s;
     }
-    .slot.target {
-      background: #231308;
-      border: 1px dashed rgba(255,255,255,0.12);
+    .tile.selected { background-color: #334155; transform: scale(1.05); border-color: #FACC15; }
+    .tile.match { animation: matchPop 0.3s ease-out forwards; }
+
+    @keyframes matchPop {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.5; }
+      100% { transform: scale(0); opacity: 0; }
     }
 
-    /* 하단 블록 대기소 영역 */
-    .dock-area {
-      width: 100%; max-width: 340px; height: 130px;
-      background: rgba(0,0,0,0.3); border: 2px solid #5C3A21; border-radius: 10px;
-      display: flex; justify-content: space-around; align-items: center;
-      position: relative; padding: 5px; margin-bottom: 10px;
-    }
-
-    /* 나무 블록 스타일 */
-    .wood-block {
-      position: absolute; display: grid; gap: 2px; cursor: grab;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
-      touch-action: none;
-      transition: transform 0.1s ease;
-    }
-    .wood-block:active { cursor: grabbing; transform: scale(1.03); }
-    
-    .wood-cell {
-      background: linear-gradient(135deg, #DEB887 0%, #C49A6C 50%, #A07144 100%);
-      border-radius: 4px; border: 1px solid #6F4522;
-      box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -2px 3px rgba(0,0,0,0.3);
-    }
-
-    /* 제어 버튼 */
-    .control-panel { width: 100%; max-width: 340px; display: flex; gap: 8px; }
+    /* 하단 버튼 (상단 밀착 배치) */
+    .control-panel { width: 100%; max-width: 400px; display: flex; gap: 8px; margin-top: 6px; }
     .btn {
       flex: 1; padding: 10px; font-size: 14px; font-weight: bold;
-      background: #D97706; color: white; border: none; border-radius: 8px;
-      cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      transition: background 0.2s;
+      border: none; border-radius: 8px; cursor: pointer; color: white;
+      transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px;
     }
-    .btn:active { background: #B45309; }
-
-    /* 클리어 팝업 */
-    #clearMsg {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-      background: rgba(15, 23, 42, 0.95); padding: 20px 30px; border-radius: 16px;
-      border: 3px solid #FACC15; text-align: center; font-size: 20px; font-weight: bold;
-      color: #FACC15; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 1000; pointer-events: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    #clearMsg.show { transform: translate(-50%, -50%) scale(1); }
+    .btn-shuffle { background-color: #2563EB; }
+    .btn-reset { background-color: #EF4444; }
+    .btn:active { opacity: 0.8; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="iq-board" id="iqDisplay">IQ = 49</div>
+    <h1>🍎 대각선 과일 매치 (5x5)</h1>
+    <div class="stats-board">
+      <div class="stat-item">점수: <span id="score" class="stat-value">0</span></div>
+      <div class="stat-item">시간: <span id="timer" class="stat-value">00:00</span></div>
+    </div>
   </header>
 
-  <!-- 메인 보드판 (6x6) -->
-  <div class="game-container" id="gameContainer"></div>
-
-  <!-- 블록 대기소 -->
-  <div class="dock-area" id="dockArea"></div>
+  <div class="puzzle-container" id="board"></div>
 
   <div class="control-panel">
-    <button class="btn" onclick="resetPuzzle()">🔄 다시 시작</button>
+    <button class="btn btn-shuffle" id="shuffleBtn" onclick="shuffleBoard()">🔀 퍼즐 섞기</button>
+    <button class="btn btn-reset" onclick="resetGame()">🔄 다시 시작</button>
   </div>
 
-  <div id="clearMsg">🎉 퍼즐 완성! IQ 테스트 통과! 🎉</div>
-
   <script>
-    // 십자 모양 타겟 홈 좌표 (6x6 기준)
-    const targetCells = [
-      {r: 1, c: 2}, {r: 1, c: 3},
-      {r: 2, c: 1}, {r: 2, c: 2}, {r: 2, c: 3}, {r: 2, c: 4},
-      {r: 3, c: 1}, {r: 3, c: 2}, {r: 3, c: 3}, {r: 3, c: 4},
-      {r: 4, c: 2}, {r: 4, c: 3},
-      {r: 5, c: 2}, {r: 5, c: 3}
-    ];
-
-    // 블록 구조 데이터
-    let blocksData = [
-      { id: 'b1', shape: [[0,0], [1,0], [2,0], [2,1]], dockIndex: 0 },
-      { id: 'b2', shape: [[0,0], [0,1], [1,1], [2,1]], dockIndex: 1 },
-      { id: 'b3', shape: [[0,1], [1,0], [1,1]], dockIndex: 2 },
-    ];
-
-    const container = document.getElementById('gameContainer');
-    const dockArea = document.getElementById('dockArea');
-    const cellSize = 52; // 그리드 셀 크기 px
+    // 🍊(귤) 대신 💙(파란색 하트) 적용
+    const FRUITS = ['🍎', '🍌', '🍇', '🍓', '💙'];
+    const GRID_SIZE = 5;
+    let board = [];
+    let score = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let selectedTileIdx = null;
+    let isProcessing = false;
 
     function initGame() {
-      container.innerHTML = '';
-      dockArea.innerHTML = '';
-      
-      // 6x6 그리드 슬롯 생성
-      for (let r = 0; r < 6; r++) {
-        for (let c = 0; c < 6; c++) {
-          const slot = document.createElement('div');
-          slot.classList.add('slot');
-          if (targetCells.some(t => t.r === r && t.c === c)) {
-            slot.classList.add('target');
+      score = 0;
+      document.getElementById('score').textContent = score;
+      resetTimer();
+      createBoard();
+      startTimer();
+    }
+
+    // 1. 초기 보드 생성 (3개 조합 안 생기도록 검사)
+    function createBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+      board = [];
+
+      for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        let fruit;
+        do {
+          fruit = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+          board[i] = fruit;
+        } while (isInitialMatch(i));
+        
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        tile.id = `tile-${i}`;
+        tile.textContent = fruit;
+        tile.onclick = () => handleTileClick(i);
+        boardEl.appendChild(tile);
+      }
+    }
+
+    // 초기 배치 매치 검사
+    function isInitialMatch(idx) {
+      const row = Math.floor(idx / GRID_SIZE);
+      const col = idx % GRID_SIZE;
+      const fruit = board[idx];
+
+      if (col >= 2 && board[idx-1] === fruit && board[idx-2] === fruit) return true;
+      if (row >= 2 && board[idx-GRID_SIZE] === fruit && board[idx-GRID_SIZE*2] === fruit) return true;
+      if (col >= 2 && row >= 2 && board[idx-GRID_SIZE-1] === fruit && board[idx-GRID_SIZE*2-2] === fruit) return true;
+      if (col <= GRID_SIZE-3 && row >= 2 && board[idx-GRID_SIZE+1] === fruit && board[idx-GRID_SIZE*2+2] === fruit) return true;
+
+      return false;
+    }
+
+    // 타일 터치 핸들러 (8방향 대각선 이동)
+    async function handleTileClick(idx) {
+      if (isProcessing) return;
+
+      const tileEl = document.getElementById(`tile-${idx}`);
+
+      if (selectedTileIdx === null) {
+        selectedTileIdx = idx;
+        tileEl.classList.add('selected');
+      } else {
+        const prevTileIdx = selectedTileIdx;
+        const prevTileEl = document.getElementById(`tile-${prevTileIdx}`);
+        
+        const row1 = Math.floor(prevTileIdx / GRID_SIZE);
+        const col1 = prevTileIdx % GRID_SIZE;
+        const row2 = Math.floor(idx / GRID_SIZE);
+        const col2 = idx % GRID_SIZE;
+
+        const rowDiff = Math.abs(row1 - row2);
+        const colDiff = Math.abs(col1 - col2);
+
+        // 8방향 이웃 확인
+        const isNeighbor = (rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0);
+
+        if (isNeighbor && prevTileIdx !== idx) {
+          isProcessing = true;
+          prevTileEl.classList.remove('selected');
+          selectedTileIdx = null;
+          
+          swapTiles(prevTileIdx, idx);
+          
+          const matches = getAllMatches();
+          if (matches.size > 0) {
+            await handleMatches();
+          } else {
+            swapTiles(prevTileIdx, idx); // 원래대로 복구
+            isProcessing = false;
           }
-          container.appendChild(slot);
+        } else {
+          prevTileEl.classList.remove('selected');
+          if (prevTileIdx === idx) {
+            selectedTileIdx = null;
+          } else {
+            selectedTileIdx = idx;
+            tileEl.classList.add('selected');
+          }
         }
       }
-
-      // 블록 생성 및 배치
-      blocksData.forEach(b => {
-        b.currentGrid = null; // 초기에는 대기소에 위치
-        createBlockElement(b);
-      });
-
-      document.getElementById('clearMsg').classList.remove('show');
-      document.getElementById('iqDisplay').textContent = "IQ = 49";
     }
 
-    function createBlockElement(b) {
-      const el = document.createElement('div');
-      el.className = 'wood-block';
-      intentElementId(el, b.id);
-
-      const maxR = Math.max(...b.shape.map(p => p[0]));
-      const maxC = Math.max(...b.shape.map(p => p[1]));
-      el.style.gridTemplateRows = `repeat(${maxR + 1}, ${cellSize}px)`;
-      el.style.gridTemplateColumns = `repeat(${maxC + 1}, ${cellSize}px)`;
-      el.style.width = `${(maxC + 1) * cellSize}px`;
-      el.style.height = `${(maxR + 1) * cellSize}px`;
-
-      b.shape.forEach(([r, c]) => {
-        const cell = document.createElement('div');
-        cell.className = 'wood-cell';
-        cell.style.gridRow = r + 1;
-        cell.style.gridColumn = c + 1;
-        el.appendChild(cell);
-      });
-
-      moveToDock(el, b);
-      makeDraggable(el, b);
-      document.body.appendChild(el);
-    }
-
-    function intentElementId(el, id) {
-      el.id = id;
-    }
-
-    // 블록을 대기소 위치로 정렬
-    function moveToDock(element, blockInfo) {
-      const dockRect = dockArea.getBoundingClientRect();
-      const blockWidth = element.offsetWidth;
-      const blockHeight = element.offsetHeight;
+    function swapTiles(idx1, idx2) {
+      const tile1El = document.getElementById(`tile-${idx1}`);
+      const tile2El = document.getElementById(`tile-${idx2}`);
       
-      // 대기소 내에서 간격 맞춰 배치
-      const slotWidth = dockRect.width / 3;
-      const targetX = dockRect.left + (slotWidth * blockInfo.dockIndex) + (slotWidth - blockWidth) / 2;
-      const targetY = dockRect.top + (dockRect.height - blockHeight) / 2;
-
-      element.style.left = `${targetX}px`;
-      element.style.top = `${targetY}px`;
-      element.style.zIndex = 10;
+      [board[idx1], board[idx2]] = [board[idx2], board[idx1]];
+      
+      tile1El.textContent = board[idx1];
+      tile2El.textContent = board[idx2];
     }
 
-    // 정밀 드래그 앤 드롭 로직 (터치 어긋남 현상 완벽 해결)
-    function makeDraggable(element, blockInfo) {
-      let startX, startY, initialLeft, initialTop;
+    // 전체 보드 매치 확인 (8방향)
+    function getAllMatches() {
+      const matchedIndices = new Set();
 
-      function pointerDown(e) {
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          const idx = r * GRID_SIZE + c;
+          const fruit = board[idx];
+          if (!fruit) continue;
 
-        startX = clientX;
-        startY = clientY;
-
-        const rect = element.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialTop = rect.top;
-
-        element.style.zIndex = 1000;
-
-        if (e.touches) {
-          window.addEventListener('touchmove', pointerMove, { passive: false });
-          window.addEventListener('touchend', pointerUp);
-        } else {
-          window.addEventListener('mousemove', pointerMove);
-          window.addEventListener('mouseup', pointerUp);
+          // 1. 가로
+          if (c <= GRID_SIZE - 3) {
+            if (board[idx+1] === fruit && board[idx+2] === fruit) {
+              matchedIndices.add(idx); matchedIndices.add(idx+1); matchedIndices.add(idx+2);
+            }
+          }
+          // 2. 세로
+          if (r <= GRID_SIZE - 3) {
+            if (board[idx+GRID_SIZE] === fruit && board[idx+GRID_SIZE*2] === fruit) {
+              matchedIndices.add(idx); matchedIndices.add(idx+GRID_SIZE); matchedIndices.add(idx+GRID_SIZE*2);
+            }
+          }
+          // 3. 대각선 (우하향)
+          if (c <= GRID_SIZE - 3 && r <= GRID_SIZE - 3) {
+            if (board[idx+GRID_SIZE+1] === fruit && board[idx+GRID_SIZE*2+2] === fruit) {
+              matchedIndices.add(idx); matchedIndices.add(idx+GRID_SIZE+1); matchedIndices.add(idx+GRID_SIZE*2+2);
+            }
+          }
+          // 4. 대각선 (좌하향)
+          if (c >= 2 && r <= GRID_SIZE - 3) {
+            if (board[idx+GRID_SIZE-1] === fruit && board[idx+GRID_SIZE*2-2] === fruit) {
+              matchedIndices.add(idx); matchedIndices.add(idx+GRID_SIZE-1); matchedIndices.add(idx+GRID_SIZE*2-2);
+            }
+          }
         }
-        e.preventDefault();
       }
-
-      function pointerMove(e) {
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-        const dx = clientX - startX;
-        const dy = clientY - startY;
-
-        element.style.left = `${initialLeft + dx}px`;
-        element.style.top = `${initialTop + dy}px`;
-      }
-
-      function pointerUp(e) {
-        if (e.touches) {
-          window.removeEventListener('touchmove', pointerMove);
-          window.removeEventListener('touchend', pointerUp);
-        } else {
-          window.removeEventListener('mousemove', pointerMove);
-          window.removeEventListener('mouseup', pointerUp);
-        }
-
-        handleSnapOrDock(element, blockInfo);
-        checkWinCondition();
-      }
-
-      element.addEventListener('mousedown', pointerDown);
-      element.addEventListener('touchstart', pointerDown, { passive: false });
+      return matchedIndices;
     }
 
-    // 보드 판 위에 정확히 안착하는지 판별
-    function handleSnapOrDock(element, blockInfo) {
-      const containerRect = container.getBoundingClientRect();
-      const elemRect = element.getBoundingClientRect();
-
-      // 보드판 영역 내부에 들어왔는지 확인
-      const isInsideBoard = 
-        elemRect.left >= containerRect.left - 30 &&
-        elemRect.top >= containerRect.top - 30 &&
-        elemRect.right <= containerRect.right + 30 &&
-        elemRect.bottom <= containerRect.bottom + 30;
-
-      if (isInsideBoard) {
-        // 가장 가까운 그리드 셀 인덱스 계산
-        const relX = elemRect.left - containerRect.left;
-        const relY = elemRect.top - containerRect.top;
-        const targetCol = Math.round(relX / cellSize);
-        const targetRow = Math.round(relY / cellSize);
-
-        // 그리드 범위 안에 완전히 매칭되면 스냅
-        if (targetCol >= 0 && targetRow >= 0) {
-          element.style.left = `${containerRect.left + targetCol * cellSize + 4}px`;
-          element.style.top = `${containerRect.top + targetRow * cellSize + 4}px`;
-          blockInfo.currentGrid = { r: targetRow, c: targetCol };
-          element.style.zIndex = 20;
-          return;
-        }
+    // 매치 애니메이션 및 점수 처리
+    async function handleMatches() {
+      const matches = getAllMatches();
+      if (matches.size === 0) {
+        isProcessing = false;
+        return;
       }
 
-      // 보드 밖이거나 범위가 벗어났다면 대기소로 복귀
-      blockInfo.currentGrid = null;
-      moveToDock(element, blockInfo);
-    }
+      matches.forEach(idx => {
+        document.getElementById(`tile-${idx}`).classList.add('match');
+      });
+      score += matches.size * 10;
+      document.getElementById('score').textContent = score;
 
-    // 승리 조건 확인
-    function checkWinCondition() {
-      let filledSlots = new Set();
-      let overlap = false;
-      let placedCount = 0;
+      await new Promise(res => setTimeout(res, 300));
 
-      blocksData.forEach(b => {
-        if (!b.currentGrid) return;
-        placedCount++;
-        b.shape.forEach(([r, c]) => {
-          const boardR = b.currentGrid.r + r;
-          const boardC = b.currentGrid.c + c;
-          const key = `${boardR},${boardC}`;
-          if (filledSlots.has(key)) overlap = true;
-          filledSlots.add(key);
-        });
+      matches.forEach(idx => {
+        board[idx] = null;
+        const tileEl = document.getElementById(`tile-${idx}`);
+        tileEl.textContent = '';
+        tileEl.classList.remove('match');
       });
 
-      if (overlap || placedCount === 0) return;
+      await new Promise(res => setTimeout(res, 100));
 
-      const allTargetFilled = targetCells.every(t => filledSlots.has(`${t.r},${t.c}`)) && filledSlots.size === targetCells.length;
+      dropAndFillTiles();
 
-      if (allTargetFilled) {
-        document.getElementById('iqDisplay').textContent = "IQ = 150+ (CLEAR!)";
-        document.getElementById('clearMsg').classList.add('show');
+      setTimeout(handleMatches, 400); 
+    }
+
+    // 타일 채우기
+    function dropAndFillTiles() {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        let emptyRow = GRID_SIZE - 1;
+        for (let r = GRID_SIZE - 1; r >= 0; r--) {
+          const idx = r * GRID_SIZE + c;
+          if (board[idx] !== null) {
+            if (r !== emptyRow) {
+              const targetIdx = emptyRow * GRID_SIZE + c;
+              board[targetIdx] = board[idx];
+              board[idx] = null;
+              document.getElementById(`tile-${targetIdx}`).textContent = board[targetIdx];
+              document.getElementById(`tile-${idx}`).textContent = '';
+            }
+            emptyRow--;
+          }
+        }
+        for (let r = emptyRow; r >= 0; r--) {
+          const idx = r * GRID_SIZE + c;
+          board[idx] = FRUITS[Math.floor(Math.random() * FRUITS.length)];
+          document.getElementById(`tile-${idx}`).textContent = board[idx];
+        }
       }
     }
 
-    function resetPuzzle() {
-      document.querySelectorAll('.wood-block').forEach(el => el.remove());
+    // 퍼즐 섞기
+    function shuffleBoard() {
+      if (isProcessing) return;
+      isProcessing = true;
+      if (selectedTileIdx !== null) {
+        document.getElementById(`tile-${selectedTileIdx}`).classList.remove('selected');
+        selectedTileIdx = null;
+      }
+      resetTimer();
+      createBoard();
+      isProcessing = false;
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerSeconds = 0;
+      document.getElementById('timer').textContent = '00:00';
+    }
+
+    function resetGame() {
       initGame();
     }
 
-    window.onload = initGame;
+    initGame();
   </script>
 </body>
 </html>
